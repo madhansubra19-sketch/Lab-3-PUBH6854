@@ -5,7 +5,8 @@ library(BiocManager)
 library(Biostrings)
 
 #Part 1 Clean Messy samples csv Data
-
+df_messy_samples <- read_csv("data/raw/messy_samples.csv",
+                             col_types = cols(.default = col_character()))
 #1. sample_id
 #Found: 2 shapes, "S0001" (50 rows) and "s-0003" (10 rows)
 #Fix:   uppercase, remove hyphen -> "S0003"
@@ -94,8 +95,10 @@ clean <- clean %>%
 #7. glucose_unit
 #Found: mg/dl, mg/dL, MG/DL (47) / mmol/L (13)
 #Fix:   case-insensitive match -> "mg/dL"; "mmol/L" as is
-#Issue: mmol/L rows have values 74.9-249.2, same range as mg/dL rows.
-#Real mmol/L glucose is ~4-15, so these labels are suspect.
+#Issue: mmol/L rows have values 74.9-249.2, identical to the mg/dL range (74.9-249.3).
+#ADA thresholds: 126 mg/dL = 7.0 mmol/L, 200 mg/dL = 11.1 mmol/L (factor 18.016).
+#Taken literally, 74.9-249.2 mmol/L would be ~1350-4490 mg/dL, which is not
+#physiologically plausible, so the unit label is suspect.
 #Decision: do NOT convert; add unit_suspect = TRUE for mmol/L rows and
 #report unit consistency as unresolved in the readiness note
 #(alternative: convert x 18.016 and show why that gives nonsense)
@@ -127,11 +130,6 @@ dir.create("data/processed", showWarnings = FALSE)
 write_csv(clean, "data/processed/clean_samples.csv")
 
 #Part 2 Clean Messy Fasta Data
-
-library(tidyverse)
-library(lubridate)
-library(BiocManager)
-library(Biostrings) 
 
 #1. read and split into records
 #Found: 30 lines, 8 headers, sequences wrap across 1-3 lines (3-60 chars each)
@@ -289,7 +287,7 @@ feature_metadata <- tibble(
   n_nonmissing = c(sum(!is.na(sfm$glucose_mg_dL)), sum(!is.na(sfm$glucose_mmol_L))),
   source = "messy_samples.csv",
   qc_note = c(NA_character_,
-              "values 74.9-249.2 are outside physiological mmol/L range (4-15); unit label suspect, not converted")
+              "values 74.9-249.2 match the mg/dL range; if truly mmol/L they would equal ~1350-4490 mg/dL (x18.016), which is not physiologically plausible. Unit label suspect; not converted.")
 )
 
 
