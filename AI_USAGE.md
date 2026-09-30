@@ -123,7 +123,6 @@ df <- cbind(df, parse_dob(df$dob))   # adds dob_raw, dob_format, dob_iso
 ```
 
 A few notes on the choices in `parse_dob.R`:
-
 - **One anchored regex per format**, each with capture groups for the parts, and each also range-checks month (01–12) and day (01–31). Anything unmatched gets `dob_format = NA`.
 - **Dot format is month-first** per your verification; the regex enforces first field ≤ 12, so a day-first value like `24.11.53` would fail to match rather than parse wrong.
 - **Century pivot** is a named constant `PIVOT_YY <- 26L` with the assumption documented in the header (≤ 26 → 20YY, else 19YY). Easy to change if the cohort turns out to include 1920s births.

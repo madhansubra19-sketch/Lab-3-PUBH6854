@@ -288,13 +288,7 @@ feature_metadata <- tibble(
               "values 74.9-249.2 match the mg/dL range; if truly mmol/L they would equal ~1350-4490 mg/dL (x18.016), which is not physiologically plausible. Unit label suspect; not converted.")
 )
 
-
-#6. readiness checks - these outputs are the evidence for the 2-3 sentence note
-#Types:        sapply(sfm, class)
-#Missingness: colSums(is.na(sfm)), and how many missing glucose are "missing" vs "asterisk" flagged
-#Units:        how many samples have a value in mg/dL vs mmol/L
-#Leakage:      is any metadata column something you'd predict from glucose? (write the answer, no code needed)
-
+#6. readiness checks
 #Types check
 sapply(sfm, class)
 
