@@ -300,9 +300,6 @@ table(sfm$glucose_flag, useNA = "ifany")
 sum(!is.na(sfm$glucose_mg_dL))
 sum(!is.na(sfm$glucose_mmol_L))
 
-#Leakage Answer:
-#Data leakage specifically occurs when information about a target outcome is present in feature columns. Because no predictive outcome target is defined in this dataset, leakage cannot be formally assessed. However, feature columns contain strictly glucose measurements, and metadata columns (sex, site, dob, redraw_requested) represent independent experimental design factors rather than downstream consequences of glucose levels. Note that patient_name is a direct identifier included for sample tracing that should be removed prior to modeling.
-
 #7. write output
 dir.create("data/processed", showWarnings = FALSE)
 write_csv(sfm, "data/processed/samples_features_metadata.csv")
