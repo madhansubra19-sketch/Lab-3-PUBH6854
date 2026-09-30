@@ -1,11 +1,11 @@
-#Lab 3 AI Usage
+# Lab 3 AI Usage
 Model used: Claude 
 AI was utilized as a comparison for cleaning the messy_samples.csv and messy_sequences.fasta
 files vs via regex methods. 
 
 
 ## Prompts used for cleaning files 
-###Cleaning the messy_samples.csv 
+### Cleaning the messy_samples.csv 
 Prompt: Attached is a messy clinical CSV with 60 records. Produce a cleaned version as a CSV I can download, with exactly these columns: sample_id, patient_name, dob, sex, enrollment_site, glucose_value, glucose_unit, notes. 
 Standardize dates to YYYY-MM-DD, sex and site to one consistent label each, and glucose to one unit system (use your judgment on how.) Keep all 60 rows. Do not drop or invent values; if something is missing or you can't decide, leave it NA and flag it.
 Then, for each column, tell me: what format variants you found, what rule you applied, and which specific records (by sample_id) were ambiguous or required an assumption.
@@ -58,7 +58,7 @@ All 60 rows are in the cleaned file; nothing was dropped or invented. Column-by-
 
 The `cleaning_flags.csv` I sent alongside lists every one of these decisions by `sample_id, column, flag` so you can join it back to the cleaned data or filter it.
 
-###Cleaning the messy_sequences.fasta
+### Cleaning the messy_sequences.fasta
 Prompt: I’m attaching a FASTA file with 8 sequences whose header lines use inconsistent formats. 
 Parse it into a CSV I can download, one row per sequence, with exactly these columns: sample_id, organism, gene, length_reported, sequence, note, header_raw. 
 Standardize sample_id and organism to one consistent form each (use your judgment on how). length_reported should be whatever length the header claims, or NA if it doesn't say. 
