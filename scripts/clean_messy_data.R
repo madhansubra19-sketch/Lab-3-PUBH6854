@@ -64,18 +64,16 @@ clean <- clean %>%
     TRUE ~ NA_character_
   ))
 
-
 #5. enrollment_site
 #Found: 7 spellings for 3 sites
-#Site A, SITE-A, site_a          -> Site A
-#Site B, siteB                   -> Site B
-#"Site C ", "Site  C"            -> Site C   (trailing space, double space)
+#Site A, SITE-A, site_a -> Site A
+#Site B, siteB  -> Site B
+#"Site C ", "Site  C" -> Site C   (trailing space, double space)
 # Fix: strip whitespace/punctuation, pull the site letter, rebuild "Site X"
 clean <- clean %>%
   mutate(
     enrollment_site = paste("Site", str_extract(str_to_upper(str_trim(enrollment_site)), "[A-C]$"))
   )
-
 
 #6. glucose_value
 #Found: mostly clean decimals; "N/A" (2 rows); trailing "*" (2 rows: 112.3*, 223.1*)
@@ -96,12 +94,8 @@ clean <- clean %>%
 #Found: mg/dl, mg/dL, MG/DL (47) / mmol/L (13)
 #Fix:   case-insensitive match -> "mg/dL"; "mmol/L" as is
 #Issue: mmol/L rows have values 74.9-249.2, identical to the mg/dL range (74.9-249.3).
-#ADA thresholds: 126 mg/dL = 7.0 mmol/L, 200 mg/dL = 11.1 mmol/L (factor 18.016).
-#Taken literally, 74.9-249.2 mmol/L would be ~1350-4490 mg/dL, which is not
-#physiologically plausible, so the unit label is suspect.
-#Decision: do NOT convert; add unit_suspect = TRUE for mmol/L rows and
+#Decision: do not convert; add unit_suspect = TRUE for mmol/L rows and
 #report unit consistency as unresolved in the readiness note
-#(alternative: convert x 18.016 and show why that gives nonsense)
 clean <- clean %>%
   mutate(
     unit_suspect = str_detect(glucose_unit, "(?i)mmol"),
