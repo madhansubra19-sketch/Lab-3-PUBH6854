@@ -8,7 +8,7 @@ library(Biostrings)
 df_messy_samples <- read_csv("data/raw/messy_samples.csv",
                              col_types = cols(.default = col_character()))
 #1. sample_id
-#Found: 2 versions, "S0001" (50 rows) and "s-0003" (10 rows)
+#Found: 2 versions, "S0001" (51 rows) and "s-0003" (9 rows)
 #Fix: uppercase, remove hyphen -> "S0003"
 clean <- df_messy_samples %>%
   mutate(sample_id = str_remove_all(str_to_upper(sample_id), "-"))

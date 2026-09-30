@@ -2,7 +2,7 @@
 Model used: Claude 
 AI was utilized as a comparison for cleaning the messy_samples.csv and messy_sequences.fasta
 files vs via regex methods. 
-
+AI was also utilized for some code generation. 
 
 ## Prompts used for cleaning files 
 ### Cleaning the messy_samples.csv 
@@ -59,7 +59,7 @@ All 60 rows are in the cleaned file; nothing was dropped or invented. Column-by-
 The `cleaning_flags.csv` I sent alongside lists every one of these decisions by `sample_id, column, flag` so you can join it back to the cleaned data or filter it.
 
 ### Cleaning the messy_sequences.fasta
-Prompt: I’m attaching a FASTA file with 8 sequences whose header lines use inconsistent formats. 
+Prompt: I am attaching a FASTA file with 8 sequences whose header lines use inconsistent formats. 
 Parse it into a CSV I can download, one row per sequence, with exactly these columns: sample_id, organism, gene, length_reported, sequence, note, header_raw. 
 Standardize sample_id and organism to one consistent form each (use your judgment on how). length_reported should be whatever length the header claims, or NA if it doesn't say. 
 Join wrapped sequence lines into a single string. Keep header_raw as the original header line exactly as written. 
@@ -100,3 +100,37 @@ Response: All 8 sequences parsed; header_raw is byte-for-byte the original line.
 - Copied verbatim including the leading `>` and internal spacing (header 3's ` | ` spaces are preserved). No rule applied.
 
 One structural observation for whoever produced this file: header 7 mixes `=` and `:` and header 8's `len:NA` is a literal placeholder — both suggest the headers were hand-typed rather than exported, which is consistent with the length mismatches above.
+
+## Prompts used for code generation
+Prompt: I have dates in these four formats:  MM/DD/YYYY e.g. 07/09/1962, YYYY-MM-DD 
+e.g. 1997-12-02  already ISO, DD-Mon-YYYY  e.g. 21-Jun-1997, MM.DD.YY  e.g. 11.24.53 
+two-digit year, ambiguous century, can you write some regex in R based on these rules? 
+Fix: detect each format with its own regex, parse, output ISO YYYY-MM-DD
+Rule: dot format read as month-first (verified: no first number > 12,and 11.24.53 / 05.30.02 
+can only be month-first)
+Rule: two-digit year <= 26 -> 20YY, else 19YY  (ASSUMPTION - document it)
+Keep: original string in dob_raw for comparison
+
+Response: I'll write this as an R script with one detector regex per format, a parser, and a small test against your examples.
+
+All four formats parse correctly, and invalid dates (like 02/29/2001) come back `NA` rather than silently shifting.
+
+Usage on your data:
+
+```r
+source("parse_dob.R")
+df <- cbind(df, parse_dob(df$dob))   # adds dob_raw, dob_format, dob_iso
+```
+
+A few notes on the choices in `parse_dob.R`:
+
+- **One anchored regex per format**, each with capture groups for the parts, and each also range-checks month (01–12) and day (01–31). Anything unmatched gets `dob_format = NA`.
+- **Dot format is month-first** per your verification; the regex enforces first field ≤ 12, so a day-first value like `24.11.53` would fail to match rather than parse wrong.
+- **Century pivot** is a named constant `PIVOT_YY <- 26L` with the assumption documented in the header (≤ 26 → 20YY, else 19YY). Easy to change if the cohort turns out to include 1920s births.
+- **Month abbreviations** are mapped explicitly (`jan`…`dec`, case-insensitive) rather than via `%b`, so results don't depend on the machine's locale.
+- **Real-date validation**: every parsed value is round-tripped through `as.Date`, so impossible dates become `NA` instead of being coerced.
+
+One thing worth checking: `dob_iso` is a character column, so if you want a true `Date`, add `as.Date(dob_iso)` afterwards.
+
+After reviewing Claude's response, I rewrote the scirpt it gave em into a simpler
+code that just modified the clean data frame I created. 

@@ -32,7 +32,7 @@ Columns added beyond the original fields:
 
 ## AI Outputs
 - `AI_USAGE.md`: the exact prompts used, the full responses, and a description of how AI was used elsewhere in the lab.
-- `data/ai/ai_clean_samples.csv`: AI-cleaned version of `messy_samples.csv`, same columns as the raw file.
+- `data/ai/ai_clean_samples.csv`: AI-cleaned version of `messy_samples.csv`, same columns as the raw file and `cleaning_flags.csv`
 - `data/ai/ai_clean_sequences.csv`: AI-parsed version of `messy_sequences.fasta`, same columns as the regex output minus `length_actual`.
 
 ## Samples Features Metadata  Inputs and Outputs
@@ -42,6 +42,7 @@ Columns added beyond the original fields:
 See WRITEUP.md for the regex vs AI comparison analysis, samples x feautres x netadata table notes and analytic readiness notes. 
 
 ## Comments   for Instructor
+- **Note**: I generated my own messy_samples.csv using generate.py that was given. 
 - **Biostrings dependency:** the FASTA read uses `Biostrings::readDNAStringSet`, which is installed through `BiocManager`, not CRAN. All header parsing is done with `stringr` regex; 
 Biostrings is only used to join the wrapped sequence lines.
 
