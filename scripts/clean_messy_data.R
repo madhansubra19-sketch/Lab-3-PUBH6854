@@ -8,23 +8,23 @@ library(Biostrings)
 df_messy_samples <- read_csv("data/raw/messy_samples.csv",
                              col_types = cols(.default = col_character()))
 #1. sample_id
-#Found: 2 shapes, "S0001" (50 rows) and "s-0003" (10 rows)
-#Fix:   uppercase, remove hyphen -> "S0003"
+#Found: 2 versions, "S0001" (50 rows) and "s-0003" (10 rows)
+#Fix: uppercase, remove hyphen -> "S0003"
 clean <- df_messy_samples %>%
   mutate(sample_id = str_remove_all(str_to_upper(sample_id), "-"))
 
 #2. patient_name
 #Found: 3 rows with all-caps surname (J. KIM, S. DAVIS, T. DAVIS)
-#Fix:   surname to title case -> "J. Kim"
+#Fix: surname to title case -> "J. Kim"
 clean <- clean %>%
   mutate(patient_name = str_to_title(patient_name))
 
 #3. dob
 #Found: 4 formats, MM/DD/YYYY   (18)  e.g. 07/09/1962, YYYY-MM-DD   (16)  e.g. 1997-12-02   already ISO, DD-Mon-YYYY  (12)  e.g. 21-Jun-1997, MM.DD.YY     (14)  e.g. 11.24.53     two-digit year, ambiguous century
-#Fix:   detect each format with its own regex, parse, output ISO YYYY-MM-DD
-#Rule:  dot format read as month-first (verified: no first number > 12,and 11.24.53 / 05.30.02 can only be month-first)
-#Rule:  two-digit year <= 26 -> 20YY, else 19YY  (ASSUMPTION - document it)
-#Keep:  original string in dob_raw for comparison
+#Fix: detect each format with its own regex, parse, output ISO YYYY-MM-DD
+#Rule: dot format read as month-first (verified: no first number > 12,and 11.24.53 / 05.30.02 can only be month-first)
+#Rule: two-digit year <= 26 -> 20YY, else 19YY  (ASSUMPTION - document it)
+#Keep: original string in dob_raw for comparison
 clean <- clean %>%
   mutate(
     dob_raw = dob,
@@ -55,7 +55,7 @@ clean <- clean %>%
 
 #4. sex/gender
 #Found: f, F, Female (18) / m, M, Male (23) / U, unknown (15) / NA (4)
-#Fix:   -> "female", "male", "unknown"; NA stays NA (not recorded != unknown)
+#Fix: "female", "male", "unknown"; NA stays NA (not recorded != unknown)
 clean <- clean %>%
   mutate(sex = case_when(
     str_detect(sex, "(?i)^(f|female)$") ~ "female",
@@ -70,7 +70,7 @@ clean <- clean %>%
 #Site A, SITE-A, site_a          -> Site A
 #Site B, siteB                   -> Site B
 #"Site C ", "Site  C"            -> Site C   (trailing space, double space)
-# Fix:   strip whitespace/punctuation, pull the site letter, rebuild "Site X"
+# Fix: strip whitespace/punctuation, pull the site letter, rebuild "Site X"
 clean <- clean %>%
   mutate(
     enrollment_site = paste("Site", str_extract(str_to_upper(str_trim(enrollment_site)), "[A-C]$"))
@@ -79,8 +79,8 @@ clean <- clean %>%
 
 #6. glucose_value
 #Found: mostly clean decimals; "N/A" (2 rows); trailing "*" (2 rows: 112.3*, 223.1*)
-#Fix:   numeric column glucose_value; "N/A" -> NA
-#Keep:  glucose_flag = "asterisk" / "missing" / NA so nothing is silently lost
+#Fix: numeric column glucose_value; "N/A" -> NA
+#Keep: glucose_flag = "asterisk" / "missing" / NA so nothing is silently lost
 clean <- clean %>%
   mutate(
     glucose_flag = case_when(
@@ -133,7 +133,7 @@ write_csv(clean, "data/processed/clean_samples.csv")
 
 #1. read and split into records
 #Found: 30 lines, 8 headers, sequences wrap across 1-3 lines (3-60 chars each)
-#Fix:   Use Biostrings::readDNAStringSet to automatically parse FASTA headers and join wrapped sequence lines
+#Fix: Use Biostrings::readDNAStringSet to automatically parse FASTA headers and join wrapped sequence lines
 dna_seqs <- readDNAStringSet("data/raw/messy_sequences.fasta")
 
 df_messy_fasta <- tibble(
@@ -144,8 +144,8 @@ df_messy_fasta <- tibble(
 
 #2. sample_id
 #Found: 8 shapes - sample_001, Sample002, sample-003, SAMPLE_004, sample005,seq6, Sample_007, sample-8. Only the number is reliable.
-#Fix:   extract token up to delimiter (^>[^\s|;]+), extract digits, zero-pad -> "S001" ... "S008"
-#Keep:  header_raw for comparison
+#Fix: extract token up to delimiter (^>[^\s|;]+), extract digits, zero-pad -> "S001" ... "S008"
+#Keep: header_raw for comparison
 clean_seq <- df_messy_fasta %>%
   mutate(
     sample_token = str_extract(header_raw, "^>[^\\s|;]+"),
@@ -221,8 +221,6 @@ table(clean_seq$organism, useNA = "ifany")
 table(clean_seq$gene, useNA = "ifany")
 
 #Part 3 Reshaping messy_samples.csv --> samples x features x metadata table
-#Input:  clean (from Part 1)
-#Output: data/processed/samples_features_metadata.csv
 
 #1. sample-level metadata
 #One row per sample; columns that DESCRIBE the sample, not measurements
@@ -250,7 +248,7 @@ features_long <- clean %>%
 
 #3. features, wide form
 #pivot_wider so each feature x unit becomes its own column:
-#   glucose_mg_dL (47 values, 13 NA) and glucose_mmol_L (13 values, 47 NA)
+#glucose_mg_dL (47 values, 13 NA) and glucose_mmol_L (13 values, 47 NA)
 #Keeping them as two columns makes the unresolved-units problem visible
 #instead of hiding it in a single mixed column
 features_wide <- features_long %>%
@@ -310,7 +308,6 @@ sum(!is.na(sfm$glucose_mmol_L))
 
 #Leakage Answer:
 #Data leakage specifically occurs when information about a target outcome is present in feature columns. Because no predictive outcome target is defined in this dataset, leakage cannot be formally assessed. However, feature columns contain strictly glucose measurements, and metadata columns (sex, site, dob, redraw_requested) represent independent experimental design factors rather than downstream consequences of glucose levels. Note that patient_name is a direct identifier included for sample tracing that should be removed prior to modeling.
-
 
 #7. write output
 dir.create("data/processed", showWarnings = FALSE)

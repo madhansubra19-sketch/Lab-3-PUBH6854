@@ -29,7 +29,7 @@ df_messy_samples %>% filter(str_detect(dob, "^\\d{2}\\.\\d{2}\\.\\d{2}$")) %>% s
 
 
 
-# Exploring messy_sequences.fasta
+#Exploring messy_sequences.fasta
 fasta_lines <- readLines("data/raw/messy_sequences.fasta")
 
 length(fasta_lines)
